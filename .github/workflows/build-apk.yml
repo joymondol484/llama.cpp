@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # ম্যানুয়ালি রান করতে চাইলে
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,17 +21,32 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # Android SDK + cmdline-tools সেটআপ (এটা দরকারী NDK লাইসেন্স হ্যান্ডেল করতে)
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3  # এটা অটো ANDROID_HOME সেট করে
+
+    - name: Accept Android SDK & NDK Licenses
+      run: |
+        echo "Accepting all SDK licenses..."
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+        echo "Updating SDK components..."
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --update
+        # যদি স্পেসিফিক NDK লাগে (আপনার লগ থেকে ভার্সন দেখে ম্যাচ করুন, যেমন 29.0.13113456)
+        # yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;29.0.13113456"
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}  # setup-android action থেকে আসে
+
     - name: Grant execute permission for gradlew
       working-directory: examples/llama.android
       run: chmod +x gradlew
 
     - name: Build with Gradle (Debug APK)
       working-directory: examples/llama.android
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --stacktrace  # --stacktrace যোগ করুন আরও ভালো লগের জন্য
 
-    - name: Build with Gradle (Release APK)  # Optional - signing ছাড়া unsigned হবে
+    - name: Build with Gradle (Release APK - unsigned)
       working-directory: examples/llama.android
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleRelease --stacktrace
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
