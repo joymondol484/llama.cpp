@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         ndk {
-    abiFilters 'armeabi-v7a', 'arm64-v8a'  // 32-bit + 64-bit দুটোই রাখতে পারেন
+    abiFilters += setOf("armeabi-v7a", "arm64-v8a")
 }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
